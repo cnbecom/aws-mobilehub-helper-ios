@@ -19,13 +19,13 @@ NSString *const AWSIdentityManagerDidSignOutNotification = @"com.amazonaws.AWSId
 typedef void (^AWSIdentityManagerCompletionBlock)( FBSDKLoginManagerLoginResult * result, NSError *error);
 
 @interface AWSIdentityManager()
-    
-    @property (nonatomic, strong) AWSCognitoCredentialsProvider *credentialsProvider;
-    @property (atomic, copy) AWSIdentityManagerCompletionBlock completionHandler;
-    
-    @property (nonatomic, strong) id<AWSSignInProvider> currentSignInProvider;
-    
-    @end
+
+@property (nonatomic, strong) AWSCognitoCredentialsProvider *credentialsProvider;
+@property (atomic, copy) AWSIdentityManagerCompletionBlock completionHandler;
+
+@property (nonatomic, strong) id<AWSSignInProvider> currentSignInProvider;
+
+@end
 
 @implementation AWSIdentityManager
 

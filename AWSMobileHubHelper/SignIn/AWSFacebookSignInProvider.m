@@ -202,6 +202,7 @@ typedef void (^AWSIdentityManagerCompletionBlock)( FBSDKLoginManagerLoginResult 
                               fromViewController:self.signInViewController
                                          handler:^(FBSDKLoginManagerLoginResult *result, NSError *error) {
                                              if (error) {
+                                                 //[[AWSIdentityManager errorAlert:[NSString stringWithFormat:@"Error logging in with FB: %@", error.localizedDescription]] show];
                                                  self.completionHandler(result, error);
                                              } else if (result.isCancelled) {
                                                  // Login canceled, do nothing
