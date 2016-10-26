@@ -62,15 +62,6 @@ Requires Allow Identity Merging to be YES.
 Support for Allow Identity Merging in Info.plist
 Various modifications to functions including logins to produce a merged logins response when a user logs in to a second account while using a first account.  Controlled by the Info.plist boolean flag  “Allow Identity Merging”.  This allows the credentials provider to merge identityId’s when two logins occur simultaneously.
 
-###Edge Case Bugs
-
-Facebook:
-
-Sign-In, choose Facebook or Google, then choose "Done".  AWSIdentityProvider shows authenticated by, and is listed in active providers and has a user name, but does NOT show logged in.  
-Sign-In, choose Facebook, then choose "Cancel". Same as above 
-Sign-In, choose Google, then choose "Deny". Same as above
-
-Sign-In, type the wrong password on Cognito Your User Pools, get the error, say ok, and Shows Authenticated by CUP but shows Bruce Buckland as provider (in nslog) but shows Sign On Error not properly reversed (strange difference)
 
 
 
