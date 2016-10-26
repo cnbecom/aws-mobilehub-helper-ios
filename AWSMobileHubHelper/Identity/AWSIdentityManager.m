@@ -30,7 +30,6 @@ typedef void (^AWSIdentityManagerCompletionBlock)( FBSDKLoginManagerLoginResult 
 @implementation AWSIdentityManager
 
 NSDictionary<NSString *, NSString *> *loginCache;
-NSDictionary<NSString *, id<AWSSignInProvider>> *signInProviderCache; // keep track of all active AWSSignInProviders
 BOOL mergingIdentityProviderManager;
 BOOL multiAccountIdentityProviderManager;
 
@@ -58,7 +57,6 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
         loginCache = [[NSDictionary<NSString *, NSString *> alloc] init];
         mergingIdentityProviderManager = [[serviceInfo.infoDictionary valueForKey:AWSInfoAllowIdentityMerging] boolValue];
         multiAccountIdentityProviderManager =  [[serviceInfo.infoDictionary valueForKey:AWSInfoAllowSimultaneousActiveAccounts  ] boolValue];
-        signInProviderCache = [[NSDictionary<NSString *, id<AWSSignInProvider>> alloc] init];
     });
     
     return _defaultIdentityManager;
@@ -116,22 +114,29 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
 }
 
 - (NSArray *)activeProviders {
-    return [signInProviderCache allValues];
-}
-- (void)activateProvider: (id<AWSSignInProvider>)signInProvider {
-    NSMutableDictionary<NSString *, id<AWSSignInProvider>> *mergeCache = [[NSMutableDictionary<NSString *, id<AWSSignInProvider>> alloc] init];
-    if (multiAccountIdentityProviderManager) {
-        mergeCache = [signInProviderCache mutableCopy];
+    Class signInProviderClass = nil;
+    
+    AWSServiceInfo *serviceInfo = [[AWSInfo defaultAWSInfo] defaultServiceInfo:AWSInfoIdentityManager];
+    NSDictionary *signInProviderKeyDictionary = [serviceInfo.infoDictionary objectForKey:@"SignInProviderKeyDictionary"];
+    
+    NSMutableArray *providerArray;
+    providerArray = [[NSMutableArray<id<AWSSignInProvider>> alloc] init ];
+    
+    // loop through the Info.plist AWS->IdentityManager->Default->SignInProviderClass dictionary
+    // which contains the class name of the SignInProvider and the NSUserDefaults key,
+    // this way, developer and user pools IdP's can maintain a session too (not just
+    // Google and Facebook) - Dictionary looks like "AWSGoogleSignInProvider":"Google" etc.
+    // if you are supporting merging identities, the current sign in provider will be the last
+    // one listed in the dictionary (are dictionaries ordered) with a key in NSUserDefaults.
+    for (NSString *key in signInProviderKeyDictionary) {
+        if ([[NSUserDefaults standardUserDefaults] objectForKey:[signInProviderKeyDictionary objectForKey:key]]) {
+            signInProviderClass = NSClassFromString(key);
+            [providerArray addObject:[signInProviderClass sharedInstance]]; // assemble list
+        }
     }
-    [mergeCache setValue:signInProvider forKey:[signInProvider identityProviderName ]];
-    signInProviderCache = [mergeCache copy];
+    return providerArray;
 }
-- (void)deactivateProvider: (id<AWSSignInProvider>)signInProvider {
-    NSMutableDictionary<NSString *, id<AWSSignInProvider>> *mergeCache = [[NSMutableDictionary<NSString *, id<AWSSignInProvider>> alloc] init];
-    mergeCache = [signInProviderCache mutableCopy];
-    [mergeCache  removeObjectForKey:[signInProvider identityProviderName ]];
-    signInProviderCache = [mergeCache copy];
-}
+
 
 
 #pragma mark -
@@ -182,7 +187,6 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
         [self dropLogin: [self.currentSignInProvider identityProviderName]];
         [self.currentSignInProvider logout];
     }
-    [self deactivateProvider: self.currentSignInProvider];
     self.currentSignInProvider = nil;
     // we still have an identityId
     [self wipeAll];
@@ -236,7 +240,6 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
             NSLog( @"Error from login %@, cancelling", error);
             // quick and dirty housekeeping logout
             [self dropLogin: [self.currentSignInProvider identityProviderName]];
-            [self deactivateProvider: self.currentSignInProvider];
             self.currentSignInProvider = nil;
             
         }
@@ -258,7 +261,6 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
 - (void)completeLogin {
     
     if ([[self currentSignInProvider] isLoggedIn]) {// (he didn't hit done, cancel or deny?)
-        [self activateProvider: self.currentSignInProvider];
     }
     
     // Force a refresh of credentials to see if we need to merge
@@ -327,7 +329,6 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
             }
             
             if (self.currentSignInProvider) {
-                [self activateProvider: self.currentSignInProvider];
                 if ([self.currentSignInProvider interceptApplication:application
                                        didFinishLaunchingWithOptions:launchOptions]) {
                 }

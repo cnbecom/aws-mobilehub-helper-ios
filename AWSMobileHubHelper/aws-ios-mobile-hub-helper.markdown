@@ -31,9 +31,7 @@ the authentication provider, but we need to be able to get the currentSignInProv
 activeProviders property
 Returns an array of instances of AWSSignInProviders with active sessions. 
 SignIn Providers that have active sessions store a value in NSUserDefaults with thier
-providerKey as a key.  Usually this value is "YES", but does not need to be (some have
-stored a token).  The existence of any value is enough to indicate that there is an 
-active session with this provider.
+providerKey as a key. 
 Returns NSArray of active AWSSignInProvider instances
 
 providerKey method
