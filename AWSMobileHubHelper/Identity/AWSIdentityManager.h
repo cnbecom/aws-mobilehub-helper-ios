@@ -45,6 +45,13 @@ FOUNDATION_EXPORT NSString *const AWSIdentityManagerDidSignOutNotification;
 @property (nonatomic, readonly, nullable) NSString *identityId;
 
 /**
+ * Completes login process, sends notification of SignIn state change
+ * clears cached temporary credentials and gets credentials. Once the
+ * AWSSignInProvider completes the login, it must call completLogin
+ */
+- (void)completeLogin;
+
+/**
  Returns the Identity Manager singleton instance configured using the information provided in `Info.plist` file.
  
  *Swift*

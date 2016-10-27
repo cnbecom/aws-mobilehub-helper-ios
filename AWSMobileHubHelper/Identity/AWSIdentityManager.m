@@ -166,28 +166,48 @@ static NSString *const AWSInfoProjectClientId = @"ProjectClientId";
     }];
 }
 
+- (NSArray *)activeProviders {
+    Class signInProviderClass = nil;
+    
+    AWSServiceInfo *serviceInfo = [[AWSInfo defaultAWSInfo] defaultServiceInfo:AWSInfoIdentityManager];
+    NSDictionary *signInProviderKeyDictionary = [serviceInfo.infoDictionary objectForKey:@"SignInProviderKeyDictionary"];
+    
+    NSMutableArray *providerArray;
+    providerArray = [[NSMutableArray<id<AWSSignInProvider>> alloc] init ];
+    // loop through the Info.plist AWS->IdentityManager->Default->SignInProviderClassDictionary
+    // and return any sessions found.
+    // Dictionary is keyed by class name and the value is the providerKey
+    // Example: "AWSGoogleSignInProvider":"Google" etc.
+    for (NSString *key in signInProviderKeyDictionary) {
+        if ([[NSUserDefaults standardUserDefaults] objectForKey:[signInProviderKeyDictionary objectForKey:key]]) {
+            signInProviderClass = NSClassFromString(key);
+            [providerArray addObject:[signInProviderClass sharedInstance]]; // assemble list
+            if (signInProviderClass && !providerArray.lastObject) {
+                NSLog(@"Unable to locate the SignIn Provider SDK for %@. Signing Out any existing session...", key);
+                [self wipeAll];
+            }
+        }
+    }
+    return providerArray;
+}
 - (BOOL)interceptApplication:(UIApplication *)application
 didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    Class signInProviderClass = nil;
-    if ([[NSUserDefaults standardUserDefaults] objectForKey:@"Facebook"]) {
-        signInProviderClass = NSClassFromString(@"AWSFacebookSignInProvider");
-    } else if ([[NSUserDefaults standardUserDefaults] objectForKey:@"Google"]) {
-        signInProviderClass = NSClassFromString(@"AWSGoogleSignInProvider");
-    }
     
-    self.currentSignInProvider = [signInProviderClass sharedInstance];
+    // Restart any sessions found.
+
+    for (id provider in [self activeProviders]) {
+        
+            self.currentSignInProvider = provider;
+            }
+            
+            if (self.currentSignInProvider) {
+                if (![self.currentSignInProvider interceptApplication:application
+                                       didFinishLaunchingWithOptions:launchOptions]) {
+                    NSLog(@"Unable to instantiate AWSSignInProvider for existing session.");
+                }
+            }
     
-    if (signInProviderClass && !self.currentSignInProvider) {
-        NSLog(@"Unable to locate the SignIn Provider SDK. Signing Out any existing session...");
-        [self wipeAll];
-    }
-    
-    if (self.currentSignInProvider) {
-        return [self.currentSignInProvider interceptApplication:application
-                                  didFinishLaunchingWithOptions:launchOptions];
-    } else {
-        return YES;
-    }
+    return YES;
 }
 
 - (BOOL)interceptApplication:(UIApplication *)application
