@@ -129,6 +129,18 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     return self.currentSignInProvider.userName;
 }
 
+- (NSString *)providerKey:(id<AWSSignInProvider>)signInProvider {
+    NSString *provider = nil;
+    AWSServiceInfo *serviceInfo = [[AWSInfo defaultAWSInfo] defaultServiceInfo:AWSInfoIdentityManager];
+    NSDictionary *signInProviderKeyDictionary = [serviceInfo.infoDictionary objectForKey:@"SignInProviderKeyDictionary"];
+    provider = [signInProviderKeyDictionary objectForKey:NSStringFromClass([signInProvider class])];
+    if (provider) {
+        return provider;
+    } else {
+        return @"SignInProviderKeyDictionary is not configured properly";
+    }
+}
+
 - (void)wipeAll {
     if (self.currentSignInProvider) { // fix login cache
         [self dropLogin: [self.currentSignInProvider identityProviderName]];

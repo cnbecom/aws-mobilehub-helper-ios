@@ -45,6 +45,26 @@ FOUNDATION_EXPORT NSString *const AWSIdentityManagerDidSignOutNotification;
 @property (nonatomic, readonly, nullable) NSString *identityId;
 
 /**
+ * Some processes in a mobile app require access to the currentSignInProvider.
+ * For example with custom OpenIdConnect or CognitoUserPools providers you may
+ * need to have access to the provider in order to sign-up a user, or recall a forgotten
+ * password.  The SignInProvider class is a good place to encapsulate interfacing with
+ * the authentication provider, but we need to be able to get the currentSignInProvider
+ * @return currentSignInProvider
+ */
+@property (nonatomic, readonly) id currentSignInProvider;
+
+/**
+ * Returns an array of instances of AWSSignInProviders with active sessions.
+ * SignIn Providers that have active sessions store a value in NSUserDefaults with thier
+ * providerKey as a key.  Usually this value is "YES", but does not need to be (some have
+ * stored a token).  The existence of any value is enough to indicate that there is an
+ * active session with this provider.
+ * @return NSArray of active AWSSignInProvider instances
+ */
+- (NSArray *)activeProviders;
+
+/**
  * Completes login process, sends notification of SignIn state change
  * clears cached temporary credentials and gets credentials. Once the
  * AWSSignInProvider completes the login, it must call completLogin
@@ -79,6 +99,13 @@ FOUNDATION_EXPORT NSString *const AWSIdentityManagerDidSignOutNotification;
 - (void)loginWithSignInProvider:(id<AWSSignInProvider>)signInProvider
               completionHandler:(void (^)(id _Nullable result, NSError * _Nullable error))completionHandler;
 
+/**
+ * A user readable name of the signInProvider passed as an such as Facebook or Google or
+ * Cognito Your User Pools.  This is the value for the Class name key in the
+ * Info.plist ClassNameKeyDictionary
+ * @return provider name or nil (if classname not found)
+ */
+- (NSString *)providerKey:(id<AWSSignInProvider>)signInProvider;
 
 /**
  * Attempts to resume session with the previous sign-in provider.
