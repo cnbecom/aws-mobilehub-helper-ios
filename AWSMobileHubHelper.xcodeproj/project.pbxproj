@@ -34,6 +34,7 @@
 		1851DD401D25CDB60010B8AA /* AWSUserFileManager.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1851DD121D25CC890010B8AA /* AWSUserFileManager.h */; };
 		1851DD511D25CF870010B8AA /* module.modulemap in CopyFiles */ = {isa = PBXBuildFile; fileRef = 1851DD501D25CF7C0010B8AA /* module.modulemap */; };
 		18A3E46C1D52AC5000A3AE26 /* libPods-AWSMobileHubHelper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 18A3E46B1D52AC5000A3AE26 /* libPods-AWSMobileHubHelper.a */; };
+		B466E54C41266BA7F86C6480 /* libPods-AWSMobileHubHelper.a in Frameworks */ = {isa = PBXBuildFile; fileRef = C265F32B8056647763AF4A09 /* libPods-AWSMobileHubHelper.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -80,8 +81,8 @@
 		18A3E46B1D52AC5000A3AE26 /* libPods-AWSMobileHubHelper.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-AWSMobileHubHelper.a"; path = "/Users/saligram/Library/Developer/Xcode/DerivedData/AWSMobileHubHelper-gyehtqpthehzduaonjwjnaptkadu/Build/Products/Debug-iphonesimulator/libPods-AWSMobileHubHelper.a"; sourceTree = "<absolute>"; };
 		9C8606474456ECAC0A2A47FB /* Pods-AWSMobileHubHelper.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AWSMobileHubHelper.release.xcconfig"; path = "Pods/Target Support Files/Pods-AWSMobileHubHelper/Pods-AWSMobileHubHelper.release.xcconfig"; sourceTree = "<group>"; };
 		B3EA1B7C4DAA1E2BB1B70928 /* Pods-AWSMobileHubHelper.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AWSMobileHubHelper.debug.xcconfig"; path = "Pods/Target Support Files/Pods-AWSMobileHubHelper/Pods-AWSMobileHubHelper.debug.xcconfig"; sourceTree = "<group>"; };
+		C265F32B8056647763AF4A09 /* libPods-AWSMobileHubHelper.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AWSMobileHubHelper.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		E50253791DC2A53F0099ECEA /* AWSMobileHubHelper-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "AWSMobileHubHelper-Bridging-Header.h"; sourceTree = "<group>"; };
-		E502537A1DC2A5400099ECEA /* AWSCUPIdPSignInProvider.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AWSCUPIdPSignInProvider.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +91,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				18A3E46C1D52AC5000A3AE26 /* libPods-AWSMobileHubHelper.a in Frameworks */,
+				B466E54C41266BA7F86C6480 /* libPods-AWSMobileHubHelper.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -168,7 +170,6 @@
 		1851DD0B1D25CC890010B8AA /* SignIn */ = {
 			isa = PBXGroup;
 			children = (
-				E502537A1DC2A5400099ECEA /* AWSCUPIdPSignInProvider.swift */,
 				1851DD0C1D25CC890010B8AA /* AWSFacebookSignInProvider.h */,
 				1851DD0D1D25CC890010B8AA /* AWSFacebookSignInProvider.m */,
 				1851DD0E1D25CC890010B8AA /* AWSGoogleSignInProvider.h */,
@@ -192,6 +193,7 @@
 			isa = PBXGroup;
 			children = (
 				18A3E46B1D52AC5000A3AE26 /* libPods-AWSMobileHubHelper.a */,
+				C265F32B8056647763AF4A09 /* libPods-AWSMobileHubHelper.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -231,12 +233,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1851DCF61D25C5A30010B8AA /* Build configuration list for PBXNativeTarget "AWSMobileHubHelper" */;
 			buildPhases = (
-				1A737FE591F558B10F28BC25 /* 📦 Check Pods Manifest.lock */,
+				1A737FE591F558B10F28BC25 /* [CP] Check Pods Manifest.lock */,
 				1851DCE91D25C5A30010B8AA /* Sources */,
 				1851DCEA1D25C5A30010B8AA /* Frameworks */,
 				1851DCEB1D25C5A30010B8AA /* CopyFiles */,
 				1851DD1C1D25CCE70010B8AA /* Headers */,
-				E70AB00DDA6652B541F1277A /* 📦 Copy Pods Resources */,
+				E70AB00DDA6652B541F1277A /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -280,14 +282,14 @@
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		1A737FE591F558B10F28BC25 /* 📦 Check Pods Manifest.lock */ = {
+		1A737FE591F558B10F28BC25 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "📦 Check Pods Manifest.lock";
+			name = "[CP] Check Pods Manifest.lock";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -295,14 +297,14 @@
 			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
 			showEnvVarsInLog = 0;
 		};
-		E70AB00DDA6652B541F1277A /* 📦 Copy Pods Resources */ = {
+		E70AB00DDA6652B541F1277A /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
-			name = "📦 Copy Pods Resources";
+			name = "[CP] Copy Pods Resources";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
