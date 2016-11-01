@@ -38,6 +38,16 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly, nullable) NSString *userName;
 
 /**
+ The email address of a user.
+ */
+@property (nonatomic, readonly, nullable) NSString *email;
+
+/**
+ The phone number of a user.
+ */
+@property (nonatomic, readonly, nullable) NSString *phone;
+
+/**
  The login handler method for the Sign-In Provider.
  The completionHandler will bubble back errors to the developers.
  */

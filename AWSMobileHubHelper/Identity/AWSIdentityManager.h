@@ -38,6 +38,18 @@ FOUNDATION_EXPORT NSString *const AWSIdentityManagerDidSignOutNotification;
 @property (nonatomic, readonly, nullable) NSString * userName;
 
 /**
+ * Email address acquired from third party identity provider, such as Facebook or Google.
+ * @return email, if user is signed-in
+ */
+@property (nonatomic, readonly, nullable) NSString * email;
+
+/**
+ * Phone Number acquired from third party identity provider, such as Facebook or Google.
+ * @return phone, if user is signed-in
+ */
+@property (nonatomic, readonly, nullable) NSString * phone;
+
+/**
  * Amazon Cognito User Identity ID. This uniquely identifies the user, regardless of
  * whether or not the user is signed-in, if User Sign-in is enabled in the project.
  * @return unique user identifier
@@ -93,7 +105,7 @@ FOUNDATION_EXPORT NSString *const AWSIdentityManagerDidSignOutNotification;
 /**
  * Signs the user in with an identity provider. Note that even if User Sign-in is not
  * enabled in the project, the user is still signed-in with the Guest type provider.
- * @param signInProviderType provider type
+ * @param signInProvider provider
  * @param completionHandler used to callback application with async operation results
  */
 - (void)loginWithSignInProvider:(id<AWSSignInProvider>)signInProvider

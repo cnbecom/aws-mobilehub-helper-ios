@@ -129,6 +129,14 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     return self.currentSignInProvider.userName;
 }
 
+- (NSString *)email {
+    return self.currentSignInProvider.email;
+}
+
+- (NSString *)phone {
+    return self.currentSignInProvider.phone;
+}
+
 - (NSString *)providerKey:(id<AWSSignInProvider>)signInProvider {
     NSString *provider = nil;
     AWSServiceInfo *serviceInfo = [[AWSInfo defaultAWSInfo] defaultServiceInfo:AWSInfoIdentityManager];

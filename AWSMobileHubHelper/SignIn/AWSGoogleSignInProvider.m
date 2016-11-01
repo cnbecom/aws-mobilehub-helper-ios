@@ -15,6 +15,7 @@
 static NSString *const AWSGoogleSignInProviderKey = @"Google";
 static NSString *const AWSGoogleSignInProviderUserNameKey = @"Google.userName";
 static NSString *const AWSGoogleSignInProviderImageURLKey = @"Google.imageURL";
+static NSString *const AWSGoogleSignInProviderEmailKey = @"Google.email";
 static NSString *const AWSGoogleSignInProviderClientScope = @"profile";
 static NSString *const AWSGoogleSignInProviderOIDCScope = @"openid";
 static NSTimeInterval const AWSGoogleSignInProviderTokenRefreshBuffer = 10 * 60;
@@ -172,6 +173,23 @@ static NSString *const AWSInfoGoogleClientId = @"ClientId";
                                               forKey:AWSGoogleSignInProviderImageURLKey];
 }
 
+
+- (NSString *)email {
+    return [[NSUserDefaults standardUserDefaults] objectForKey:AWSGoogleSignInProviderEmailKey];
+}
+
+- (void)setEmail:(NSString *)email {
+    [[NSUserDefaults standardUserDefaults] setObject:email
+                                              forKey:AWSGoogleSignInProviderEmailKey];
+}
+
+- (NSString *)phone {
+    return nil;
+}
+
+- (void)setPhone:(NSString *)phone {
+}
+
 - (void)reloadSession {
     if ([[NSUserDefaults standardUserDefaults] objectForKey:AWSGoogleSignInProviderKey]) {
         GIDSignIn *signIn = [GIDSignIn sharedInstance];
@@ -186,6 +204,7 @@ static NSString *const AWSInfoGoogleClientId = @"ClientId";
     
     self.userName = googleUser.profile.name;
     self.imageURL = [googleUser.profile imageURLWithDimension:AWSGoogleSignInProviderProfileImageDimension];
+    self.email = googleUser.profile.email;
 }
 
 - (void)login:(AWSIdentityManagerCompletionBlock)completionHandler {
