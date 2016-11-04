@@ -14,6 +14,7 @@
 
 NSString *const AWSIdentityManagerDidSignInNotification = @"com.amazonaws.AWSIdentityManager.AWSIdentityManagerDidSignInNotification";
 NSString *const AWSIdentityManagerDidSignOutNotification = @"com.amazonaws.AWSIdentityManager.AWSIdentityManagerDidSignOutNotification";
+NSString *const AWSIdentityManagerUserDefaultsInBackground = @"com.amazonaws.AWSIdentityManager.InBackground";
 
 typedef void (^AWSIdentityManagerCompletionBlock)(id result, NSError *error);
 
@@ -28,9 +29,11 @@ typedef void (^AWSIdentityManagerCompletionBlock)(id result, NSError *error);
 
 @implementation AWSIdentityManager
 
-NSDictionary<NSString *, NSString *> *loginCache;
-BOOL mergingIdentityProviderManager;
-BOOL multiAccountIdentityProviderManager;
+// Enhancement support
+NSDictionary<NSString *, NSString *> *loginCache; // Be a "real" AWSIdentityProviderManager
+BOOL mergingIdentityProviderManager; // Switch to allow or reject identity merging
+BOOL multiAccountIdentityProviderManager; // Switch to allow or reject stacked logins
+BOOL doNotInitProviders; // Switch true if last shutdown was graceless
 
 static NSString *const AWSInfoIdentityManager = @"IdentityManager";
 static NSString *const AWSInfoRoot = @"AWS";
@@ -54,7 +57,9 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
         loginCache = [[NSDictionary<NSString *, NSString *> alloc] init];
         mergingIdentityProviderManager = [[serviceInfo.infoDictionary valueForKey:AWSInfoAllowIdentityMerging] boolValue];
         multiAccountIdentityProviderManager =  [[serviceInfo.infoDictionary valueForKey:AWSInfoAllowSimultaneousActiveAccounts  ] boolValue];
+        doNotInitProviders = ![[NSUserDefaults standardUserDefaults] boolForKey:AWSIdentityManagerUserDefaultsInBackground];
 
+        
     });
     
     return _defaultIdentityManager;
@@ -156,7 +161,7 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     [self wipeAll];
     
     self.currentSignInProvider = nil;
-
+    
     // if we still have an active session, getIdentityId will find it
     [self interceptApplication: [UIApplication sharedApplication] didFinishLaunchingWithOptions:nil];
     
@@ -265,32 +270,55 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     // Example: "AWSGoogleSignInProvider":"Google" etc.
     for (NSString *key in signInProviderKeyDictionary) {
         if ([[NSUserDefaults standardUserDefaults] objectForKey:[signInProviderKeyDictionary objectForKey:key]]) {
-            signInProviderClass = NSClassFromString(key);
-            [providerArray addObject:[signInProviderClass sharedInstance]]; // assemble list
-            if (signInProviderClass && !providerArray.lastObject) {
-                NSLog(@"Unable to locate the SignIn Provider SDK for %@. Signing Out any existing session...", key);
-                [self wipeAll];
+            if (doNotInitProviders) { // previous exit was not graceful
+                [[NSUserDefaults standardUserDefaults] removeObjectForKey:[signInProviderKeyDictionary objectForKey:key]];
+                [self wipeAll]; // once would be enough
+                NSLog(@"Previous exit was not graceful, cleaning up");
+            } else {
+                signInProviderClass = NSClassFromString(key);
+                [providerArray addObject:[signInProviderClass sharedInstance]]; // assemble list
+                if (signInProviderClass && !providerArray.lastObject) {
+                    NSLog(@"Unable to locate the SignIn Provider SDK for %@. Signing Out any existing session...", key);
+                    [self wipeAll];
+                }
+                
             }
         }
     }
     return providerArray;
 }
+// Since Cognito drops NSUserDefaults and a keychain, and since
+// having changes in identity pool or AWSSignInProvider "IdP Pools"
+// can result in AWSSignInProvider crashes (especially AWSGoogleSignInProvider),
+// it behooves us to reset all those droppings if we crash.
+
+- (BOOL)interceptApplicationDidEnterBackground:(UIApplication *)application {
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:YES
+                   forKey:AWSIdentityManagerUserDefaultsInBackground];
+    NSLog(@"Entering background");
+    return YES;
+}
+
 - (BOOL)interceptApplication:(UIApplication *)application
 didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
     // Restart any sessions found.
-
+    
     for (id provider in [self activeProviders]) {
         
-            self.currentSignInProvider = provider;
-            }
-            
-            if (self.currentSignInProvider) {
-                if (![self.currentSignInProvider interceptApplication:application
-                                       didFinishLaunchingWithOptions:launchOptions]) {
-                    NSLog(@"Unable to instantiate AWSSignInProvider for existing session.");
-                }
-            }
+        self.currentSignInProvider = provider;
+    }
+    
+    if (self.currentSignInProvider) {
+        if (![self.currentSignInProvider interceptApplication:application
+                                didFinishLaunchingWithOptions:launchOptions]) {
+            NSLog(@"Unable to instantiate AWSSignInProvider for existing session.");
+        }
+    }
+    
+    [[NSUserDefaults standardUserDefaults] setBool:FALSE forKey:AWSIdentityManagerUserDefaultsInBackground]; // in foreground
+                    NSLog(@"Entering Foreground");
     
     return YES;
 }
