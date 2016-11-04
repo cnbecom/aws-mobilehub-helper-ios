@@ -114,6 +114,14 @@ FOUNDATION_EXPORT NSString *const AWSIdentityManagerDidSignOutNotification;
 - (void)resumeSessionWithCompletionHandler:(void (^)(id _Nullable result, NSError * _Nullable error))completionHandler;
 
 /**
+ * Provides AWSIdentityManager with access to application state change
+ * Allows us to do cleanup when there are pool inconsistencies causing a crash
+ * @param application application
+ * @return true
+ */
+- (BOOL)interceptApplicationDidEnterBackground:(UIApplication *)application;
+
+/**
  * Passes parameters used to launch the application to the current identity provider. For some
  * third party providers, this completes the User Sign-in call flow, which used a browser to
  * get information from the user, directly.

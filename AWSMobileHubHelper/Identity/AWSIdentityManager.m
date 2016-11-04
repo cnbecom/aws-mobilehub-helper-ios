@@ -14,6 +14,7 @@
 
 NSString *const AWSIdentityManagerDidSignInNotification = @"com.amazonaws.AWSIdentityManager.AWSIdentityManagerDidSignInNotification";
 NSString *const AWSIdentityManagerDidSignOutNotification = @"com.amazonaws.AWSIdentityManager.AWSIdentityManagerDidSignOutNotification";
+NSString *const AWSIdentityManagerUserDefaultsInBackground = @"com.amazonaws.AWSIdentityManager.InBackground";
 
 typedef void (^AWSIdentityManagerCompletionBlock)(id result, NSError *error);
 
@@ -275,22 +276,44 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     }
     return providerArray;
 }
+// Since Cognito drops NSUserDefaults and a keychain, and since
+// having changes in identity pool or AWSSignInProvider "IdP Pools"
+// can result in AWSSignInProvider crashes (especially AWSGoogleSignInProvider),
+// it behooves us to reset all those droppings if we crash.
+
+- (BOOL)interceptApplicationDidEnterBackground:(UIApplication *)application {
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:YES
+                   forKey:AWSIdentityManagerUserDefaultsInBackground];
+    return YES;
+}
+
 - (BOOL)interceptApplication:(UIApplication *)application
 didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     
     // Restart any sessions found.
-
-    for (id provider in [self activeProviders]) {
-        
+    if (![[NSUserDefaults standardUserDefaults] boolForKey:AWSIdentityManagerUserDefaultsInBackground]) { // If we crashed
+        NSLog(@"Last exit was not graceful, clearing identityId and sessions");
+        for (id provider in [self activeProviders]) {
             self.currentSignInProvider = provider;
-            }
+            [self.currentSignInProvider logout];
+        }
+        [self wipeAll]; // clears the keychain
+    } else { // we didn't crash
+        
+        for (id provider in [self activeProviders]) {
             
-            if (self.currentSignInProvider) {
-                if (![self.currentSignInProvider interceptApplication:application
-                                       didFinishLaunchingWithOptions:launchOptions]) {
-                    NSLog(@"Unable to instantiate AWSSignInProvider for existing session.");
-                }
+            self.currentSignInProvider = provider;
+        }
+        
+        if (self.currentSignInProvider) {
+            if (![self.currentSignInProvider interceptApplication:application
+                                    didFinishLaunchingWithOptions:launchOptions]) {
+                NSLog(@"Unable to instantiate AWSSignInProvider for existing session.");
             }
+        }
+    }
+    [[NSUserDefaults standardUserDefaults] setBool:FALSE forKey:AWSIdentityManagerUserDefaultsInBackground]; // in foreground
     
     return YES;
 }
