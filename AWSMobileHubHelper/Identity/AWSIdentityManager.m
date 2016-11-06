@@ -312,6 +312,9 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
 
 - (BOOL)interceptApplication:(UIApplication *)application
 didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:NO
+                   forKey:AWSIdentityManagerUserDefaultsProvidersOk]; // Assume they are not ok
     
     // Restart any sessions found.
     
