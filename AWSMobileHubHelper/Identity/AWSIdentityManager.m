@@ -230,6 +230,7 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     }
     // Always do completeLogin to guarantee credentials and NSNotification
     [self completeLogin];
+    doNotInitProviders = NO;
 }
 
 - (void)completeLogin {
@@ -306,7 +307,7 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setBool:YES
                    forKey:AWSIdentityManagerUserDefaultsProvidersOk];
-    NSLog(@"Entering background");
+    doNotInitProviders = NO;
     return YES;
 }
 
