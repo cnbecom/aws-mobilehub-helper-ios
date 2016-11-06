@@ -14,7 +14,7 @@
 
 NSString *const AWSIdentityManagerDidSignInNotification = @"com.amazonaws.AWSIdentityManager.AWSIdentityManagerDidSignInNotification";
 NSString *const AWSIdentityManagerDidSignOutNotification = @"com.amazonaws.AWSIdentityManager.AWSIdentityManagerDidSignOutNotification";
-NSString *const AWSIdentityManagerUserDefaultsInBackground = @"com.amazonaws.AWSIdentityManager.InBackground";
+NSString *const AWSIdentityManagerUserDefaultsProvidersOk = @"com.amazonaws.AWSIdentityManager.ProvidersOk";
 
 typedef void (^AWSIdentityManagerCompletionBlock)(id result, NSError *error);
 
@@ -57,8 +57,10 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
         loginCache = [[NSDictionary<NSString *, NSString *> alloc] init];
         mergingIdentityProviderManager = [[serviceInfo.infoDictionary valueForKey:AWSInfoAllowIdentityMerging] boolValue];
         multiAccountIdentityProviderManager =  [[serviceInfo.infoDictionary valueForKey:AWSInfoAllowSimultaneousActiveAccounts  ] boolValue];
-        doNotInitProviders = ![[NSUserDefaults standardUserDefaults] boolForKey:AWSIdentityManagerUserDefaultsInBackground];
-
+        if ((doNotInitProviders = ![[NSUserDefaults standardUserDefaults] boolForKey:AWSIdentityManagerUserDefaultsProvidersOk])) {
+            NSLog(@"Graceless exit detected");
+        };
+        
         
     });
     
@@ -211,9 +213,17 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
         self.completionHandler(result,error);
     }];
 }
+//              (^AWSIdentityManagerCompletionBlock)(id result, NSError *error)
+- (void)resumeSessionWithCompletionHandler:(AWSIdentityManagerCompletionBlock)completionHandler {
 
-- (void)resumeSessionWithCompletionHandler:(void (^)(id result, NSError *error))completionHandler {
-    self.completionHandler = completionHandler;
+    // Wrap the completion handler in a closure that sets the all clear flag
+    self.completionHandler = ^ (id result, NSError *error) {
+        NSLog(@"Session resume complete - setting Providers Ok");
+        NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+        [userDefaults setBool:YES
+                       forKey:AWSIdentityManagerUserDefaultsProvidersOk];
+        completionHandler(result, error);
+    };
     
     for (id<AWSSignInProvider> provider  in [self activeProviders]) {
         [provider reloadSession]; // reload each of the providers that have active sessions
@@ -271,9 +281,9 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     for (NSString *key in signInProviderKeyDictionary) {
         if ([[NSUserDefaults standardUserDefaults] objectForKey:[signInProviderKeyDictionary objectForKey:key]]) {
             if (doNotInitProviders) { // previous exit was not graceful
+                NSLog(@"Graceless exit - removing %@",key);
                 [[NSUserDefaults standardUserDefaults] removeObjectForKey:[signInProviderKeyDictionary objectForKey:key]];
                 [self wipeAll]; // once would be enough
-                NSLog(@"Previous exit was not graceful, cleaning up");
             } else {
                 signInProviderClass = NSClassFromString(key);
                 [providerArray addObject:[signInProviderClass sharedInstance]]; // assemble list
@@ -295,7 +305,7 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
 - (BOOL)interceptApplicationDidEnterBackground:(UIApplication *)application {
     NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
     [userDefaults setBool:YES
-                   forKey:AWSIdentityManagerUserDefaultsInBackground];
+                   forKey:AWSIdentityManagerUserDefaultsProvidersOk];
     NSLog(@"Entering background");
     return YES;
 }
@@ -316,10 +326,6 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
             NSLog(@"Unable to instantiate AWSSignInProvider for existing session.");
         }
     }
-    
-    [[NSUserDefaults standardUserDefaults] setBool:FALSE forKey:AWSIdentityManagerUserDefaultsInBackground]; // in foreground
-                    NSLog(@"Entering Foreground");
-    
     return YES;
 }
 
