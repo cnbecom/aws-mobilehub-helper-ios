@@ -14,6 +14,7 @@
 static NSString *const AWSFacebookSignInProviderKey = @"Facebook";
 static NSString *const AWSFacebookSignInProviderUserNameKey = @"Facebook.userName";
 static NSString *const AWSFacebookSignInProviderImageURLKey = @"Facebook.imageURL";
+static NSString *const AWSFacebookSignInProviderEmailKey = @"Facebook.email";
 static NSTimeInterval const AWSFacebookSignInProviderTokenRefreshBuffer = 10 * 60;
 
 typedef void (^AWSIdentityManagerCompletionBlock)(id result, NSError *error);
@@ -152,6 +153,22 @@ typedef void (^AWSIdentityManagerCompletionBlock)(id result, NSError *error);
                                               forKey:AWSFacebookSignInProviderImageURLKey];
 }
 
+- (NSString *)email {
+    return [[NSUserDefaults standardUserDefaults] objectForKey:AWSFacebookSignInProviderEmailKey];
+}
+
+- (void)setEmail:(NSString *)email {
+    [[NSUserDefaults standardUserDefaults] setObject:email
+                                              forKey:AWSFacebookSignInProviderEmailKey];
+}
+
+- (NSString *)phone {
+    return nil;
+}
+
+- (void)setPhone:(NSString *)phone {
+}
+
 - (void)reloadSession {
     if ([[NSUserDefaults standardUserDefaults] objectForKey:AWSFacebookSignInProviderKey]
         && [FBSDKAccessToken currentAccessToken]) {
@@ -179,11 +196,19 @@ typedef void (^AWSIdentityManagerCompletionBlock)(id result, NSError *error);
     }];
     
     FBSDKGraphRequest *requestForName = [[FBSDKGraphRequest alloc] initWithGraphPath:@"me"
-                                                                          parameters:nil];
+                                                                          parameters:@{@"fields" : @"name,id,email"}];
     [requestForName startWithCompletionHandler:^(FBSDKGraphRequestConnection *connection,
                                                  NSDictionary *result,
                                                  NSError *queryError) {
         self.userName = result[@"name"];
+    }];
+    
+    FBSDKGraphRequest *requestForEmail = [[FBSDKGraphRequest alloc] initWithGraphPath:@"me"
+                                                                           parameters:@{@"fields" : @"name,id,email"}];
+    [requestForEmail startWithCompletionHandler:^(FBSDKGraphRequestConnection *connection,
+                                                 NSDictionary *result,
+                                                 NSError *queryError) {
+        self.email = result[@"email"];
     }];
 }
 
