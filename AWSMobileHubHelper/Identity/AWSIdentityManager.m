@@ -24,6 +24,7 @@ typedef void (^AWSIdentityManagerCompletionBlock)(id result, NSError *error);
 @property (atomic, copy) AWSIdentityManagerCompletionBlock completionHandler;
 
 @property (nonatomic, strong) id<AWSSignInProvider> currentSignInProvider;
+@property (nonatomic, strong) id<AWSSignInProvider> lastSignInProvider;
 
 @end
 
@@ -61,6 +62,11 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
         if (!(multiAccountIdentityProviderManager =  [[serviceInfo.infoDictionary valueForKey:AWSInfoAllowSimultaneousActiveAccounts  ] boolValue])) {
             multiAccountIdentityProviderManager = FALSE; // Mobile Hub Compatibility
         };
+        if (mergingIdentityProviderManager && !multiAccountIdentityProviderManager) {
+            @throw [NSException exceptionWithName:NSInternalInconsistencyException
+                                           reason:@"Illegal Configuration - Allow Identity Merging requires Allow Simultaneous Active Accounts"
+                                         userInfo:nil];
+        }
         if ((doNotInitProviders = ![[NSUserDefaults standardUserDefaults] boolForKey:AWSIdentityManagerUserDefaultsProvidersOk])) {
             NSLog(@"Graceless exit detected");
         };
@@ -107,7 +113,7 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     } else { // merging, add the new login to the cache
         NSMutableDictionary<NSString *, NSString *> *merge = [[NSMutableDictionary<NSString *, NSString *> alloc] init];
         merge = [loginCache mutableCopy];
-
+        
         for (NSString* key in logins) {
             merge[key] = logins[key];
         }
@@ -195,32 +201,34 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     }];
 }
 
+
+
 - (void)loginWithSignInProvider:(id)signInProvider
               completionHandler:(void (^)(id result, NSError *error))completionHandler {
 
     // don't create multiple logins if the Allow Simultaneous Active Accounts is NO
     if (!multiAccountIdentityProviderManager  && self.currentSignInProvider) {
-        [self logoutWithCompletionHandler:^void (id result, NSError *error) {
-            if ( error != nil ) {
-                NSLog( @"Error from logoutWithCompletionHandler %@", error);
-            }
-        }];
+        // Do a quick and dirty logout, because we don't want to create a disabled ID
+        // before logging in.
+        [self.currentSignInProvider logout];
+        [self wipeAll];
     }
     // allow multiple logins but don't merge the list
-    if (multiAccountIdentityProviderManager && !mergingIdentityProviderManager) {
-        // in this case, we don't want to let the credentials provider retry till he decides
-        // to do a getcredentials, instead we wipe and force it.
+    if (multiAccountIdentityProviderManager && !mergingIdentityProviderManager && self.currentSignInProvider) {
+        // We are logged in and want to remain logged in, but we need to empty the cache, and we want the
+        // next attempt at credentials to start fresh
         // This allows multiple stacked logins without merging
         [self wipeAll];
     }
+    self.lastSignInProvider = self.currentSignInProvider; // save for error recovery
     self.currentSignInProvider = signInProvider;
     
     self.completionHandler = completionHandler;
     [self.currentSignInProvider login:^void (id result, NSError *error) {
         if ( error != nil ) {
             // catch the completion handler so we can do some housekeeping
-            // so we don't leave currentSignInProvider as wrong provider
-            self.currentSignInProvider = nil;
+            self.currentSignInProvider = self.lastSignInProvider;
+            [self.currentSignInProvider reloadSession]; // stay logged in
         }
         self.completionHandler(result,error);
     }];
@@ -261,10 +269,10 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
                 AWSLogError(@"Fatal exception: [%@]", task.exception);
                 kill(getpid(), SIGKILL);
             }
-            // Cannot merge identities is a failed login, not logging in with another
-            // provider.  And this or any other error causes us to logout and
+            // Cannot merge identities is a failed login, not logging in with
+            // another provider.  And this error causes us to logout and
             // go look for other sessions to start.
-            if (task.error.code == AWSCognitoIdentityErrorResourceConflict || task.error != nil) {
+            if (task.error.code == AWSCognitoIdentityErrorResourceConflict) {
                 [self logoutWithCompletionHandler:^void (id result, NSError *error) {
                     if ( error != nil ) {
                         NSLog( @"Error from logoutWithCompletionHandler %@", error);
