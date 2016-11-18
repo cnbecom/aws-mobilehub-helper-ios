@@ -252,8 +252,11 @@ typedef void (^AWSIdentityManagerCompletionBlock)(id result, NSError *error);
 
 - (BOOL)interceptApplication:(UIApplication *)application
 didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    return [[FBSDKApplicationDelegate sharedInstance] application:application
+    // This  FBSDK method Always returns NO... period... but we need to return yes to get a new session
+    // Probably an FBSDK
+    [[FBSDKApplicationDelegate sharedInstance] application:application
                                     didFinishLaunchingWithOptions:launchOptions];
+    return YES; // Always return yes
 }
 
 - (BOOL)interceptApplication:(UIApplication *)application

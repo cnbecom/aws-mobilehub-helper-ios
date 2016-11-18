@@ -171,7 +171,7 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     self.currentSignInProvider = nil;
     
     // if we still have an active session, getIdentityId will find it
-    [self interceptApplication: [UIApplication sharedApplication] didFinishLaunchingWithOptions:nil];
+    [self restartAnyExistingSessions: [UIApplication sharedApplication] didFinishLaunchingWithOptions:nil];
     
     [[self.credentialsProvider getIdentityId] continueWithBlock:^id _Nullable(AWSTask<NSString *> * _Nonnull task) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -236,9 +236,11 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     for (id<AWSSignInProvider> provider  in [self activeProviders]) {
         [provider reloadSession]; // reload each of the providers that have active sessions
     }
-    // Always do completeLogin to guarantee credentials and NSNotification
-    [self completeLogin];
-    doNotInitProviders = NO;
+    // do completeLogin to guarantee credentials if there are no sessions
+    if ([[self activeProviders] count] == 0) {
+              [self completeLogin];
+    }
+    doNotInitProviders = NO; // all init's have been started.  Crash will be detected next start
 }
 
 - (void)completeLogin {
@@ -247,12 +249,6 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     
     [[self.credentialsProvider credentials] continueWithBlock:^id _Nullable(AWSTask<AWSCredentials *> * _Nonnull task) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (self.currentSignInProvider) {
-                NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-                [notificationCenter postNotificationName:AWSIdentityManagerDidSignInNotification
-                                                  object:[AWSIdentityManager defaultIdentityManager]
-                                                userInfo:nil];
-            }
             if (task.exception) {
                 AWSLogError(@"Fatal exception: [%@]", task.exception);
                 kill(getpid(), SIGKILL);
@@ -267,8 +263,17 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
                     }
                     self.completionHandler(task.result, task.error); // done deliver result
                 }];
-            } else {
-                self.completionHandler(task.result, task.error);  // no issues
+            } else if (task.error) { // some sort of error - should NOT be a good sign in but log in NSLog and dont Notify
+                NSLog(@"Could not get credentials - This should never happen %@", task.error);
+                self.completionHandler(task.result, task.error); // palliative degradation, but Don't corrupt Dataset with DidSignIn notice
+            } else { // no issues
+                if (self.currentSignInProvider) { // won't have this if not authenticated
+                    NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
+                    [notificationCenter postNotificationName:AWSIdentityManagerDidSignInNotification
+                                                      object:[AWSIdentityManager defaultIdentityManager]
+                                                    userInfo:nil];
+                }
+                self.completionHandler(task.result, task.error);
             }
         });
         return nil;
@@ -324,12 +329,8 @@ static NSString *const AWSInfoAllowSimultaneousActiveAccounts = @"Allow Simultan
     return providerArray;
 }
 
-- (BOOL)interceptApplication:(UIApplication *)application
-didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    [userDefaults setBool:NO
-                   forKey:AWSIdentityManagerUserDefaultsProvidersOk]; // Assume they are not ok
-    
+- (void)restartAnyExistingSessions:(UIApplication *)application
+     didFinishLaunchingWithOptions:(NSDictionary *)launchOptions  {
     // Restart any sessions found.
     for (id provider in [self activeProviders]) {
         
@@ -342,6 +343,14 @@ didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
             NSLog(@"Unable to instantiate AWSSignInProvider for existing session.");
         }
     }
+}
+
+- (BOOL)interceptApplication:(UIApplication *)application
+didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+    [userDefaults setBool:NO
+                   forKey:AWSIdentityManagerUserDefaultsProvidersOk]; // Assume they are not ok
+    [self restartAnyExistingSessions:application didFinishLaunchingWithOptions:launchOptions];
     return YES;
 }
 
