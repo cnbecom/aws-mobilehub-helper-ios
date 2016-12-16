@@ -1,0 +1,27 @@
+PODS:
+  - AWSCognito (2.4.12):
+    - AWSCore (= 2.4.12)
+  - AWSCore (2.4.12)
+  - AWSLambda (2.4.12):
+    - AWSCore (= 2.4.12)
+  - AWSS3 (2.4.12):
+    - AWSCore (= 2.4.12)
+  - AWSSNS (2.4.12):
+    - AWSCore (= 2.4.12)
+
+DEPENDENCIES:
+  - AWSCognito (~> 2.4.6)
+  - AWSLambda (~> 2.4.6)
+  - AWSS3 (~> 2.4.6)
+  - AWSSNS (~> 2.4.6)
+
+SPEC CHECKSUMS:
+  AWSCognito: 3c897210f6bfbb04585332388dff2036a3f39540
+  AWSCore: 8ee5b1dc06a0fd562429fe7120113ca93cbfbca6
+  AWSLambda: 39c628a20f48bcdb8d9ab469fbfe866236668a62
+  AWSS3: 7bb3e095a37ed8334a0b868bbca74ab574b37a4f
+  AWSSNS: 758ecea491002c9064f3771a853ca9250b93ccc0
+
+PODFILE CHECKSUM: 2888e663e7fe4a48a20427440b234a46e8094a63
+
+COCOAPODS: 1.0.1
