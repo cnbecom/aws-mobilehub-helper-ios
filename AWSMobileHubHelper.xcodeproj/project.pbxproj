@@ -79,6 +79,7 @@
 		1851DD131D25CC890010B8AA /* AWSUserFileManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AWSUserFileManager.m; sourceTree = "<group>"; };
 		1851DD501D25CF7C0010B8AA /* module.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		18A3E46B1D52AC5000A3AE26 /* libPods-AWSMobileHubHelper.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libPods-AWSMobileHubHelper.a"; path = "/Users/saligram/Library/Developer/Xcode/DerivedData/AWSMobileHubHelper-gyehtqpthehzduaonjwjnaptkadu/Build/Products/Debug-iphonesimulator/libPods-AWSMobileHubHelper.a"; sourceTree = "<absolute>"; };
+		2EEAC5241E065DAC000AC2EF /* AWSMobileHubHelperKonstants.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AWSMobileHubHelperKonstants.h; sourceTree = "<group>"; };
 		9C8606474456ECAC0A2A47FB /* Pods-AWSMobileHubHelper.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AWSMobileHubHelper.release.xcconfig"; path = "Pods/Target Support Files/Pods-AWSMobileHubHelper/Pods-AWSMobileHubHelper.release.xcconfig"; sourceTree = "<group>"; };
 		B3EA1B7C4DAA1E2BB1B70928 /* Pods-AWSMobileHubHelper.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AWSMobileHubHelper.debug.xcconfig"; path = "Pods/Target Support Files/Pods-AWSMobileHubHelper/Pods-AWSMobileHubHelper.debug.xcconfig"; sourceTree = "<group>"; };
 		C265F32B8056647763AF4A09 /* libPods-AWSMobileHubHelper.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-AWSMobileHubHelper.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -127,6 +128,7 @@
 				1851DD0B1D25CC890010B8AA /* SignIn */,
 				1851DD111D25CC890010B8AA /* UserFiles */,
 				1851DCF01D25C5A30010B8AA /* AWSMobileHubHelper.h */,
+				2EEAC5241E065DAC000AC2EF /* AWSMobileHubHelperKonstants.h */,
 			);
 			path = AWSMobileHubHelper;
 			sourceTree = "<group>";

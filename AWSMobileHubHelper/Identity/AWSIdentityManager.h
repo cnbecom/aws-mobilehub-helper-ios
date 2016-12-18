@@ -93,7 +93,7 @@ FOUNDATION_EXPORT NSString *const AWSIdentityManagerDidSignOutNotification;
 /**
  * Signs the user in with an identity provider. Note that even if User Sign-in is not
  * enabled in the project, the user is still signed-in with the Guest type provider.
- * @param signInProviderType provider type
+ * @param signInProvider provider type
  * @param completionHandler used to callback application with async operation results
  */
 - (void)loginWithSignInProvider:(id<AWSSignInProvider>)signInProvider
